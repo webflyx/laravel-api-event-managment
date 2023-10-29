@@ -4,32 +4,19 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
+use App\Http\Traits\CanLoadRelationships;
 use App\Models\Event;
 use Illuminate\Http\Request;
 
 class EventController extends Controller
 {
-    
-    protected function withIncludeRelation(string $relation): bool
-    {
-        $include = request()->query('include');
-        $relations = array_map('trim', explode(',', $include));
+    use CanLoadRelationships;
 
-        return in_array($relation, $relations);
-    }
+    private array $relations = ['user', 'attendees', 'user.attendees'];
 
     public function index()
     {
-        $query = Event::query();
-
-        $access_relations = ['user', 'attendees', 'user.attendees'];
-
-        foreach( $access_relations as $relation ) {
-            $query->when(
-                $this->withIncludeRelation($relation),
-                fn($q) => $q->with($relation)
-            );
-        }
+        $query = $this->loadRelationships(Event::query(), $this->relations);
 
         return EventResource::collection($query->latest()->paginate());
     }
@@ -46,13 +33,12 @@ class EventController extends Controller
             'user_id' => 1,
         ]);
 
-        return $event;
+        return new EventResource($this->loadRelationships($event, $this->relations));
     }
 
     public function show(Event $event)
     {
-        $event->load(['user','attendees']);
-        return new EventResource($event);
+        return new EventResource($this->loadRelationships($event, $this->relations));
     }
 
     public function update(Request $request, Event $event)
@@ -67,7 +53,7 @@ class EventController extends Controller
             'user_id'=> 1,
         ]);
 
-        return $event;
+        return new EventResource($this->loadRelationships($event, $this->relations));
     }
 
     public function destroy(Event $event)
