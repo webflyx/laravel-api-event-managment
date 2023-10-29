@@ -9,17 +9,31 @@ use Illuminate\Http\Request;
 
 class EventController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    
+    protected function withIncludeRelation(string $relation): bool
     {
-        return EventResource::collection(Event::with(['user', 'attendees'])->paginate());
+        $include = request()->query('include');
+        $relations = array_map('trim', explode(',', $include));
+
+        return in_array($relation, $relations);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    public function index()
+    {
+        $query = Event::query();
+
+        $access_relations = ['user', 'attendees', 'user.attendees'];
+
+        foreach( $access_relations as $relation ) {
+            $query->when(
+                $this->withIncludeRelation($relation),
+                fn($q) => $q->with($relation)
+            );
+        }
+
+        return EventResource::collection($query->latest()->paginate());
+    }
+
     public function store(Request $request)
     {
         $event = Event::create([
@@ -35,18 +49,12 @@ class EventController extends Controller
         return $event;
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Event $event)
     {
         $event->load(['user','attendees']);
         return new EventResource($event);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Event $event)
     {
         $event->update([
@@ -62,9 +70,6 @@ class EventController extends Controller
         return $event;
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Event $event)
     {
         $event->delete();
