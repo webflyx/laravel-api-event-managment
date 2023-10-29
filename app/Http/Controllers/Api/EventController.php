@@ -13,7 +13,7 @@ class EventController extends Controller
      */
     public function index()
     {
-        //
+        return Event::all();
     }
 
     /**
@@ -21,7 +21,17 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $event = Event::create([
+            ...$request->validate([
+                'name' => 'required|string|min:5|max:255',
+                'description' => 'nullable|string',
+                'start_time' => 'required|date',
+                'end_time' => 'required|date|after:start_time',
+            ]),
+            'user_id' => 1,
+        ]);
+
+        return $event;
     }
 
     /**
@@ -29,7 +39,7 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
-        //
+        return $event;
     }
 
     /**
@@ -37,7 +47,17 @@ class EventController extends Controller
      */
     public function update(Request $request, Event $event)
     {
-        //
+        $event->update([
+            ...$request->validate([
+                'name' => 'sometimes|string|min:5|max:255',
+                'description' => 'nullable|string',
+                'start_time' => 'sometimes|date',
+                'end_time' => 'sometimes|date|after:start_time',
+            ]),
+            'user_id'=> 1,
+        ]);
+
+        return $event;
     }
 
     /**
@@ -45,6 +65,8 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
-        //
+        $event->delete();
+
+        return response(status: 204);
     }
 }
