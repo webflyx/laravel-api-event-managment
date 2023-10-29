@@ -18,7 +18,7 @@ trait CanLoadRelationships
 
     public function loadRelationships(
         Model|QueryBuilder|EloquentBuilder $for,
-        ?array $relations
+        ?array $relations = null
     ): Model|QueryBuilder|EloquentBuilder
     {
         $relations = $relations ? $relations : [];

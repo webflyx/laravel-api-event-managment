@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Traits\CanLoadRelationships;
 use App\Models\Event;
 use App\Models\Attendee;
 use Illuminate\Http\Request;
@@ -10,9 +11,14 @@ use App\Http\Resources\AttendeeResource;
 
 class AttendeeController extends Controller
 {
+
+    use CanLoadRelationships;
+    
+    private array $relations = ['user'];
+
     public function index(Event $event)
     {
-        $attendees = $event->attendees()->latest();
+        $attendees = $this->loadRelationships($event->attendees()->latest(), $this->relations);
 
         return AttendeeResource::collection($attendees->paginate());
     }
@@ -26,7 +32,7 @@ class AttendeeController extends Controller
 
     public function show(Event $event, Attendee $attendee)
     {
-        return new AttendeeResource($attendee);
+        return new AttendeeResource($this->loadRelationships($attendee, $this->relations));
     }
 
     public function destroy(Event $event, Attendee $attendee)
