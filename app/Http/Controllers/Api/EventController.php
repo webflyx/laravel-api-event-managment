@@ -48,6 +48,9 @@ class EventController extends Controller
 
     public function update(Request $request, Event $event)
     {
+
+        $this->authorize('event-update', $event);
+
         $event->update([
             ...$request->validate([
                 'name' => 'sometimes|string|min:5|max:255',
