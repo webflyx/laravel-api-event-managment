@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Event;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
 use App\Http\Traits\CanLoadRelationships;
-use App\Models\Event;
-use Illuminate\Http\Request;
 
 class EventController extends Controller
 {
@@ -18,9 +18,10 @@ class EventController extends Controller
     {
         $this->middleware('auth:sanctum')->except('index', 'show');
         $this->authorizeResource(Event::class, 'event');
+        $this->middleware('throttle:api');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $query = $this->loadRelationships(Event::query(), $this->relations);
 
